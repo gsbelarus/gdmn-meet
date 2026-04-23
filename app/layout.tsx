@@ -3,7 +3,14 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "gdmn Meet",
-  description: "Privacy-first peer-to-peer video meetings."
+  description: "Privacy-first peer-to-peer video meetings.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" }
+    ],
+    shortcut: "/favicon.ico"
+  }
 };
 
 export default function RootLayout({
