@@ -1,0 +1,58 @@
+flowchart LR
+    subgraph inputs["Live streams during call"]
+        LOCAL["Local video track"]
+        REMOTE1["Remote video track<br/>(participant 1)"]
+        REMOTE2["Remote video track<br/>(participant 2)"]
+        AUD_LOC["Local audio track"]
+        AUD_R1["Remote audio (p1)"]
+        AUD_R2["Remote audio (p2)"]
+    end
+
+    subgraph compose["Composite video"]
+        CANVAS["Canvas 2x2 grid<br/>drawn every frame"]
+        CSTREAM["canvas.captureStream()"]
+        CANVAS --> CSTREAM
+    end
+
+    LOCAL --> CANVAS
+    REMOTE1 --> CANVAS
+    REMOTE2 --> CANVAS
+
+    subgraph rec["MediaRecorder layer"]
+        VREC["Video MediaRecorder<br/>mime = getSupportedMIME()<br/>webm (Chrome/FF) / mp4 (Safari)"]
+        AREC1["Audio MediaRecorder<br/>per participant"]
+        AREC2["Audio MediaRecorder<br/>per participant"]
+    end
+
+    CSTREAM --> VREC
+    AUD_LOC --> AREC1
+    AUD_R1 --> AREC1
+    AUD_R2 --> AREC2
+
+    subgraph safari["Safari fix"]
+        TS["timeSlice = 1000 ms<br/>start(1000) + restart<br/>every 30 s chunk"]
+    end
+    TS -. applies to .-> VREC
+    TS -. applies to .-> AREC1
+    TS -. applies to .-> AREC2
+
+    subgraph upload["Chunked upload"]
+        OND["ondataavailable<br/>every 30 s"]
+        API["Chunk API<br/>interviewId,<br/>participantId,<br/>timestamp, ext"]
+        OND --> API
+    end
+
+    VREC --> OND
+    AREC1 --> OND
+    AREC2 --> OND
+
+    classDef src fill:#eaf5ff,stroke:#2b6cb0,color:#1a365d
+    classDef comp fill:#fff5f7,stroke:#b83280,color:#702459
+    classDef reclass fill:#fffae6,stroke:#b7791f,color:#744210
+    classDef fix fill:#ffe5e5,stroke:#c53030,color:#742a2a
+    classDef up fill:#e6fffa,stroke:#2c7a7b,color:#234e52
+    class inputs src
+    class compose comp
+    class rec reclass
+    class safari fix
+    class upload up

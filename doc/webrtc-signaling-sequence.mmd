@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    participant A as Peer A (caller)
+    participant S as Socket.IO server
+    participant B as Peer B (callee)
+
+    A->>S: connect(roomId, participantId, instanceId)
+    B->>S: connect(roomId, participantId, instanceId)
+    A->>S: JOIN { audio, video }
+    S-->>B: JOIN (A is available)
+    B-->>S: JOIN (B is available)
+    S-->>A: JOIN (B is available)
+
+    Note over A,B: Perfect Negotiation begins
+    A->>A: new RTCPeerConnection(iceServers)
+    A->>A: addTrack(cam, mic)
+    A->>A: createOffer() → setLocalDescription
+    A->>S: CALLING { sdp }
+    S->>B: CALLING { sdp }
+    B->>B: new RTCPeerConnection(iceServers)
+    B->>B: setRemoteDescription(offer)
+    B->>B: createAnswer() → setLocalDescription
+    B->>S: ANSWER_CALL { sdp }
+    S->>A: ANSWER_CALL { sdp }
+
+    par ICE trickle (both sides)
+        A->>S: SIGNAL { candidate }
+        S->>B: SIGNAL { candidate }
+        B->>B: buffer until remoteDescription set
+        B->>B: addIceCandidate
+    and
+        B->>S: SIGNAL { candidate }
+        S->>A: SIGNAL { candidate }
+        A->>A: addIceCandidate
+    end
+
+    Note over A,B: connection = 'connected' — media flows P2P or via TURN
+
+    loop every 2.5 s
+        A->>S: SOCKET_PING
+        S->>B: SOCKET_PING
+        B->>S: SOCKET_PONG
+        S->>A: SOCKET_PONG
+    end

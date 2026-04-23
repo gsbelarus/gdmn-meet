@@ -1,0 +1,30 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Healthy
+
+    Healthy : Healthy<br/>connected + RTP flowing<br/>PING/PONG every 2.5 s
+
+    Healthy --> PreProblem : trouble signal<br/>(ICE fail/disc, stream dead,<br/>bytes frozen > 5 s)
+    PreProblem : PreProblem<br/>stamp preProblemDiscovered
+    PreProblem --> Healthy : recovered < 1 tick
+    PreProblem --> Degraded : still unhealthy
+
+    Degraded : Degraded<br/>problemDiscovered = now<br/>restartIceTried = undefined
+
+    Degraded --> IceRestart : caller &&<br/>socket OK && elapsed > 9 s
+    IceRestart : IceRestart<br/>pc.restartIce()
+    IceRestart --> Healthy : ICE reconnects
+    IceRestart --> FullRestart : elapsed > 18 s (recoveryDelay)
+
+    Degraded --> FullRestart : elapsed > 18 s &&<br/>socket OK && caller
+    FullRestart : FullRestart<br/>restartCall() tears down and<br/>renegotiates from scratch
+    FullRestart --> Healthy : new pc connects
+
+    Degraded --> WaitInternet : elapsed > 18 s &&<br/>(!socket || !navigator.onLine ||<br/>missed heartbeat)
+    WaitInternet : WaitInternet<br/>keep waiting up to 60 s
+    WaitInternet --> Healthy : connectivity restored
+    WaitInternet --> Ended : elapsed > 60 s<br/>(waitingForInternetDelay)
+
+    FullRestart --> Ended : callee timeout<br/>elapsed > 78 s
+    Ended : Ended<br/>"Connection lost. Please<br/>check internet connection."
+    Ended --> [*]

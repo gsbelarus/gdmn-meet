@@ -1,0 +1,41 @@
+{
+  "name": "gdmn-meet",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "build": "next build && tsc --project tsconfig.server.json",
+    "start": "node dist/server.js",
+    "lint": "next lint",
+    "clean": "del-cli \"**/dist\" \"!**/node_modules/**/dist\"",
+    "clean:all": "del-cli **/.turbo && del-cli **/.next && del-cli \"**/node_modules\" \"!**/node_modules/**/node_modules\"",
+    "docker": "docker build -t gsbelarus/gdmn-meet . && docker push gsbelarus/gdmn-meet"
+  },
+  "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
+    "@mediapipe/tasks-vision": "^0.10.3",
+    "dayjs": "^1.11.13",
+    "express": "^4.21.2",
+    "mathjs": "^14.5.2",
+    "next": "14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.18",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "del-cli": "^7.0.0"
+  }
+}

@@ -1,0 +1,121 @@
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+
+export type IceServerConfig = {
+  urls: string[];
+  username?: string;
+  credential?: string;
+};
+
+export type WebRTCConfigFile = {
+  stun: IceServerConfig[];
+  turn: IceServerConfig[];
+  icePolicy: "all" | "relay";
+};
+
+export const defaultWebRTCConfig: WebRTCConfigFile = {
+  stun: [
+    {
+      urls: [
+        "stun:stun.l.google.com:19302",
+        "stun:stun.cloudflare.com:3478"
+      ]
+    }
+  ],
+  turn: [
+    {
+      urls: ["turns:coturn.your-server.com:443"],
+      username: "user",
+      credential: "password"
+    },
+  ],
+  icePolicy: "all"
+};
+
+function cloneIceServers(servers: IceServerConfig[]) {
+  return servers.map((server) => ({
+    urls: [...server.urls],
+    username: server.username,
+    credential: server.credential
+  }));
+}
+
+function cloneWebRTCConfig(config: WebRTCConfigFile): WebRTCConfigFile {
+  return {
+    stun: cloneIceServers(config.stun),
+    turn: cloneIceServers(config.turn),
+    icePolicy: config.icePolicy
+  };
+}
+
+function normalizeIceServers(value: unknown): IceServerConfig[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<IceServerConfig[]>((servers, entry) => {
+    if (!entry || typeof entry !== "object") {
+      return servers;
+    }
+
+    const urls = Array.isArray((entry as IceServerConfig).urls)
+      ? (entry as IceServerConfig).urls.filter(
+        (url): url is string => typeof url === "string" && url.length > 0
+      )
+      : [];
+
+    if (urls.length === 0) {
+      return servers;
+    }
+
+    const username =
+      typeof (entry as IceServerConfig).username === "string"
+        ? (entry as IceServerConfig).username
+        : undefined;
+    const credential =
+      typeof (entry as IceServerConfig).credential === "string"
+        ? (entry as IceServerConfig).credential
+        : undefined;
+
+    servers.push({
+      urls,
+      username,
+      credential
+    });
+
+    return servers;
+  }, []);
+}
+
+export function normalizeWebRTCConfig(value: unknown): WebRTCConfigFile {
+  if (!value || typeof value !== "object") {
+    return cloneWebRTCConfig(defaultWebRTCConfig);
+  }
+
+  const config = value as Partial<WebRTCConfigFile>;
+  const stun = normalizeIceServers(config.stun);
+  const turn = normalizeIceServers(config.turn);
+
+  return {
+    stun: stun.length > 0 ? stun : cloneIceServers(defaultWebRTCConfig.stun),
+    turn: turn.length > 0 ? turn : cloneIceServers(defaultWebRTCConfig.turn),
+    icePolicy: config.icePolicy === "relay" ? "relay" : "all"
+  };
+}
+
+export function getWebRTCConfigPath() {
+  return path.resolve(
+    process.env.WEBRTC_CONFIG_PATH ?? "./config/webrtc.config.json"
+  );
+}
+
+export function readWebRTCConfig(): WebRTCConfigFile {
+  const configPath = getWebRTCConfigPath();
+
+  if (!existsSync(configPath)) {
+    return cloneWebRTCConfig(defaultWebRTCConfig);
+  }
+
+  const fileContents = readFileSync(configPath, "utf8");
+  return normalizeWebRTCConfig(JSON.parse(fileContents));
+}

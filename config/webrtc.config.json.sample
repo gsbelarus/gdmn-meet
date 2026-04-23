@@ -1,0 +1,20 @@
+rename the file from webrtc.config.json.sample to webrtc.config.json!
+
+{
+  "stun": [
+    {
+      "urls": [
+        "stun:stun.l.google.com:19302",
+        "stun:stun.cloudflare.com:3478"
+      ]
+    }
+  ],
+  "turn": [
+    {
+      "urls": [
+        "turns:coturn.some-server.com:443"
+      ],
+    },
+  ],
+  "icePolicy": "all"
+}

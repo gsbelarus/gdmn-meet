@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph filtered["Filtered jurisdiction (e.g. RU — RKN DPI / TSPU filter)"]
+        direction TB
+        CAND["Candidate's browser<br/>(behind national filter)"]
+        DPI["National DPI / filter<br/>blocks non-443, unknown<br/>TURN endpoints"]
+        CAND --> DPI
+    end
+
+    subgraph open_juris["Reachable jurisdiction (EU / US / etc.)"]
+        direction TB
+        TURN["TURN over TLS<br/>:443<br/>(coturn, Let's Encrypt cert)"]
+        SOCK["Recruiter.AI<br/>Socket.IO signaling"]
+    end
+
+    subgraph other_peer["Interviewer's browser"]
+        INT["RTCPeerConnection"]
+    end
+
+    DPI == "TLS on :443<br/>(looks like HTTPS)" ==> TURN
+    TURN == "relay media<br/>(DTLS-SRTP)" ==> INT
+    DPI -. "signaling<br/>(WSS :443)" .-> SOCK
+    SOCK -. "offer / answer / ICE" .-> INT
+
+    note1["Per-org config via<br/>ServiceManager lets us route<br/>each tenant's TURN to the right<br/>jurisdiction at runtime."]
+    TURN -.- note1
+
+    classDef blocked fill:#ffe5e5,stroke:#c53030,color:#742a2a
+    classDef open fill:#e6fffa,stroke:#2c7a7b,color:#234e52
+    classDef peer fill:#eaf5ff,stroke:#2b6cb0,color:#1a365d
+    classDef note fill:#fffae6,stroke:#b7791f,color:#744210
+    class filtered blocked
+    class open_juris open
+    class other_peer peer
+    class note1 note

@@ -1,0 +1,55 @@
+flowchart LR
+    subgraph browser1["Peer A — Interviewer's browser"]
+        A_cam["Camera + Mic"]
+        A_app["Recruiter.AI web app<br/>(useVideoCall + useMediaDevices)"]
+        A_pc["RTCPeerConnection"]
+        A_cam --> A_app --> A_pc
+    end
+
+    subgraph browser2["Peer B — Candidate's browser"]
+        B_cam["Camera + Mic"]
+        B_app["Recruiter.AI web app<br/>(useVideoCall + useMediaDevices)"]
+        B_pc["RTCPeerConnection"]
+        B_cam --> B_app --> B_pc
+    end
+
+    subgraph signaling["Signaling plane"]
+        SOCKET["Socket.IO server<br/>(thin relay, 5-min<br/>connectionStateRecovery)"]
+    end
+
+    subgraph stun_turn["ICE plane"]
+        STUN1["STUN<br/>stun.l.google.com"]
+        STUN2["STUN<br/>stun.cloudflare.com"]
+        STUN3["STUN<br/>coturn.com"]
+        TURN_EU["TURN/TLS :443<br/>EU jurisdiction"]
+        TURN_OTHER["TURN/TLS :443<br/>other jurisdictions<br/>(for filtered regions)"]
+    end
+
+    subgraph storage["Recording storage"]
+        UPLOAD["Chunk upload API<br/>30 s chunks"]
+    end
+
+    A_app <-- "offer / answer<br/>ICE / PING-PONG" --> SOCKET
+    B_app <-- "offer / answer<br/>ICE / PING-PONG" --> SOCKET
+
+    A_pc -. "srflx lookup" .-> STUN1
+    A_pc -. "srflx lookup" .-> STUN2
+    A_pc -. "srflx lookup" .-> STUN3
+    B_pc -. "srflx lookup" .-> STUN1
+    B_pc -. "srflx lookup" .-> STUN3
+
+    A_pc == "DTLS-SRTP<br/>direct (host/srflx)" === B_pc
+    A_pc -. "relay fallback" .-> TURN_EU
+    B_pc -. "relay fallback" .-> TURN_EU
+    B_pc -. "relay behind<br/>national filter" .-> TURN_OTHER
+
+    A_app --> UPLOAD
+
+    classDef peer fill:#eaf5ff,stroke:#2b6cb0,color:#1a365d
+    classDef sig fill:#fffae6,stroke:#b7791f,color:#744210
+    classDef ice fill:#e6fffa,stroke:#2c7a7b,color:#234e52
+    classDef stor fill:#fff5f7,stroke:#b83280,color:#702459
+    class browser1,browser2 peer
+    class signaling sig
+    class stun_turn ice
+    class storage stor
