@@ -4,6 +4,8 @@
 
 Video meeting application. Deploy the app and signalling server under hostnames you control. For technical details, read the article [Building a Resilient WebRTC Video Call](doc/webrtc-video-call-architecture.md).
 
+Try it out: [meet.gdmn.app](https://meet.gdmn.app)
+
 ## What is inside
 
 - Single-project Next.js app

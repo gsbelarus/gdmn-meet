@@ -1623,29 +1623,29 @@ export default function Page() {
         home ?
           <>
             <div className='w-full max-w-5xl overflow-hidden text-center'>
-              <div className='relative z-10 flex flex-col items-center font-bold leading-[1.05] text-[clamp(2rem,6vw,3rem)]'>
-                <div
+              <h1 className='relative z-10 flex flex-col items-center font-bold leading-[1.05] text-[clamp(2rem,6vw,3rem)]'>
+                <span
                   style={{
                     textShadow: '3px 3px #fff59d'
                   }}
                 >
-                  Welcome to a privacy-first
-                </div>
-                <div
+                  GDMN Meet is a free privacy-first
+                </span>
+                <span
                   style={{
                     textShadow: '3px 3px #fff59d'
                   }}
                 >
-                  fully peer-to-peer
-                </div>
-                <div
+                  true P2P video call solution
+                </span>
+                <span
                   style={{
                     textShadow: '3px 3px #fff59d'
                   }}
                 >
-                  video conferencing solution
-                </div>
-              </div>
+                  for direct WebRTC meetings in the browser
+                </span>
+              </h1>
             </div>
             <div className='flex w-full max-w-5xl flex-col items-center gap-4 lg:flex-row lg:justify-center'>
               <Button onClick={() => setHome(false)}>
